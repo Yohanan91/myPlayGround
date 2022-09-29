@@ -14,7 +14,7 @@ resource "aws_instance" "this_virtual_machine" {
     monitoring              = true
     subnet_id               = element(var.subnets, count.index)
     iam_iam_instance_profile = var.iam_iam_instance_profile
-    user_user_data_base64    = var.userdata_overrude != null ? var.userdata_override : base64encode(data.template_file.user_data[count.index].rendered)
+    user_data_base64         = var.userdata_overrude != null ? var.userdata_override : base64encode(data.template_file.user_data[count.index].rendered)
     ebs_optimized            = var.ebs_optimized
     source_dest_check        = var.source_dest_check  
 
@@ -30,6 +30,16 @@ resource "aws_instance" "this_virtual_machine" {
 
     volume_tags = {
       Terraform = "true"
-      Subscription = var.subscription != null ? var.Subscription : var.base
+      Name      = element(local.vm_names, count.index)
     }
 }
+
+resource "aws_ebs_volume" "this_aws_ebs_volume" {
+    count = local.secondary_ebs_size != null ? var.vm_count : 0
+    availability_zone = element(local.secondary_ebs_azs, count.index)
+    size              = local.secondary_ebs_size
+    encrypted         = true
+    type              = local.secondary_ebs_type
+    iops              = local.secondary_ebs_iops   
+}
+
